@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api from '../api/axios';
-import ItemCard from '../components/ItemCard';
-import SearchFilterBar from '../components/SearchFilterBar';
 import { useLanguage } from '../context/LanguageContext';
 
 // The floating "things people lose" motif in the hero - each chip drifts
@@ -20,48 +17,12 @@ const FLOATING_ITEMS = [
 function Home() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Search + filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('All');
-  const [filterStatus, setFilterStatus] = useState('All'); // All / lost / found
-
-  // Re-fetch the bulletin feed whenever search/filter changes (debounced)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const fetchItems = async () => {
-        setLoading(true);
-        try {
-          const params = {};
-          if (searchTerm) params.search = searchTerm;
-          if (filterCategory !== 'All') params.category = filterCategory;
-          if (filterStatus !== 'All') params.status = filterStatus;
-
-          const response = await api.get('/items', { params });
-          setItems(response.data);
-          setLoading(false);
-        } catch (err) {
-          console.error("Error fetching items:", err);
-          setLoading(false);
-        }
-      };
-      fetchItems();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm, filterCategory, filterStatus]);
-
-  const scrollToFeed = () => {
-    document.getElementById('feed')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   return (
     <div className="bg-gray-50 dark:bg-slate-950 transition-colors">
 
       {/* ── HERO ───────────────────────────────────────────── */}
-      <section className="hero-gradient relative overflow-hidden pt-28 pb-40 px-4">
+      <section className="hero-gradient relative overflow-hidden pt-28 pb-20 px-4">
         {/* Floating item chips */}
         {FLOATING_ITEMS.map((f, i) => (
           <motion.div
@@ -82,7 +43,7 @@ function Home() {
             transition={{ duration: 0.5 }}
             className="glass-panel inline-block px-4 py-1.5 rounded-full text-xs font-semibold text-white/80 mb-6 tracking-wide"
           >
-            🎓 University of Sri Jayewardenepura
+            🔎 Lose it. Find it. Get it back.
           </motion.span>
 
           <motion.h1
@@ -132,91 +93,85 @@ function Home() {
         </div>
       </section>
 
-      {/* Floating glass search bar, overlapping the hero's bottom edge */}
-      <div className="relative z-20 -mt-16 px-4">
+      {/* ── ABOUT / HOW IT WORKS ──────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 py-16">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="max-w-xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-2xl shadow-2xl dark:shadow-black/40 p-2.5 flex gap-2"
-        >
-          <span className="pl-3 flex items-center text-gray-400 dark:text-gray-500">🔎</span>
-          <input
-            type="text"
-            placeholder={t('searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && scrollToFeed()}
-            className="flex-1 bg-transparent outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm"
-          />
-          <button
-            onClick={scrollToFeed}
-            className="bg-blue-600 dark:bg-blue-500 text-white text-sm font-semibold px-5 py-2 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-400 transition"
-          >
-            {t('Search') || 'Search'}
-          </button>
-        </motion.div>
-      </div>
-
-      {/* ── FEED ───────────────────────────────────────────── */}
-      <div id="feed" className="max-w-7xl mx-auto px-4 pt-20 pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-6"
+          className="text-center mb-12"
         >
-          <h2 className="font-display text-2xl font-bold text-gray-800 dark:text-white">{t('homeFeedTitle')}</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('homeFeedSubtitle')}</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-3">
+            How LankaFind Works
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+            A free, community-driven platform to reunite people with the things they've
+            lost — no phone number needed, no middleman, just a simple report and a match.
+          </p>
         </motion.div>
 
-        <SearchFilterBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          category={filterCategory}
-          onCategoryChange={setFilterCategory}
-          accentColor="blue"
-        />
-        <div className="flex gap-2 mb-6">
-          {['All', 'lost', 'found'].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition ${
-                filterStatus === s
-                  ? 'bg-blue-600 dark:bg-blue-500 text-white'
-                  : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-400'
-              }`}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[
+            {
+              icon: '📝',
+              title: 'Report It',
+              desc: 'Lost or found something? Post the details, a photo, and where it happened - it only takes a minute.',
+              accent: 'from-red-500 to-orange-400'
+            },
+            {
+              icon: '🔍',
+              title: 'Get Matched',
+              desc: 'LankaFind automatically compares new reports against existing ones and suggests likely matches for you.',
+              accent: 'from-blue-500 to-indigo-400'
+            },
+            {
+              icon: '🤝',
+              title: 'Reunite',
+              desc: 'Message the other person right on LankaFind, verify ownership, and get your item back safely.',
+              accent: 'from-emerald-500 to-teal-400'
+            }
+          ].map((step, i) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, delay: i * 0.1 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm dark:shadow-black/20 p-6 text-center"
             >
-              {s === 'All' ? t('statusAll') : s === 'lost' ? t('statusLost') : t('statusFound')}
-            </button>
+              <div
+                className={`w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${step.accent} flex items-center justify-center text-2xl shadow-md`}
+              >
+                {step.icon}
+              </div>
+              <h3 className="font-semibold text-gray-800 dark:text-white mb-2">{step.title}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{step.desc}</p>
+            </motion.div>
           ))}
         </div>
 
-        {loading ? (
-          <div className="text-center text-gray-500 dark:text-gray-400 py-8 font-medium">{t('loadingItems')}</div>
-        ) : items.length === 0 ? (
-          <div className="text-center text-gray-400 dark:text-gray-500 py-8 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700">
-            {t('noItemsMatch')}
+        {/* Secure claims highlight */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="mt-6 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-500/10 dark:to-amber-500/5 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left"
+        >
+          <div className="w-14 h-14 flex-shrink-0 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-400 flex items-center justify-center text-2xl shadow-md">
+            🔒
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {items.map((item, i) => (
-              <motion.div
-                key={item._id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
-                whileHover={{ y: -4 }}
-              >
-                <ItemCard item={item} />
-              </motion.div>
-            ))}
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-white mb-1">Verified &amp; Secure Claims</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              Finders can set a secret verification question - only someone who knows the right
+              answer unlocks the contact details. Every claim attempt is logged, so you can see
+              exactly who tried to claim your item and when.
+            </p>
           </div>
-        )}
-      </div>
+        </motion.div>
+      </section>
 
     </div>
   );
